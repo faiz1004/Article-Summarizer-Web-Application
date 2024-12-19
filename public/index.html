@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <title>Article Summarizer</title>
+    <style>
+        /* General Styles */
+        .App {
+            font-family: 'Roboto', Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #00c6ff, #0072ff); /* Gradient background */
+            color: #fff;
+            text-align: center;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        /* Title Styling */
+        h1 {
+            font-size: 3em;
+            font-weight: bold;
+            color: #fff;
+            margin-bottom: 30px;
+            text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.3); /* Adding shadow for emphasis */
+        }
+
+        /* Input field styling */
+        .App-input {
+            width: 80%;
+            max-width: 600px;
+            padding: 15px;
+            margin: 10px 0;
+            border: 2px solid #fff;
+            border-radius: 8px;
+            font-size: 16px;
+            outline: none;
+            box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
+            background-color: rgba(255, 255, 255, 0.8); /* Slight transparency for input */
+            color: #333;
+        }
+
+        .App-input:focus {
+            border-color: #00c6ff; /* Bright focus color */
+            background-color: rgba(255, 255, 255, 1);
+        }
+
+        /* Button Styling */
+        .App-button {
+            background-color: #00c6ff;
+            color: white;
+            font-size: 16px;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 10px;
+            width: 80%;
+            max-width: 600px;
+        }
+
+        .App-button:hover {
+            background-color: #0072ff;
+            transform: scale(1.1); /* Hover effect */
+        }
+
+        .App-button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+
+        /* Error Message Styling */
+        .App-error {
+            color: #ff6f61; /* More vibrant error color */
+            font-weight: bold;
+            margin-top: 15px;
+            font-size: 1.1em;
+        }
+
+        /* Loader Styling */
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #00c6ff;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin-top: 30px;
+        }
+
+        /* Keyframe for spinner animation */
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Summary Section */
+        .App-summary {
+            width: 80%;
+            max-width: 600px;
+            background-color: rgba(255, 255, 255, 0.9); /* Slight transparency for summary */
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.2);
+            margin-top: 30px;
+            color: #333;
+        }
+
+        .App-summary h2 {
+            color: #00c6ff;
+            margin-bottom: 10px;
+            font-size: 1.5em;
+        }
+
+        .App-summary p {
+            color: #333;
+            line-height: 1.7;
+            font-size: 1.1em;
+            margin-bottom: 0;
+        }
+
+        /* Responsive Design for smaller screens */
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2.5em;
+            }
+
+            .App-input {
+                width: 90%;
+                font-size: 14px;
+            }
+
+            .App-button {
+                width: 90%;
+                padding: 15px 25px;
+                font-size: 18px;
+            }
+
+            .App-summary {
+                width: 90%;
+            }
+
+            .spinner {
+                width: 60px;
+                height: 60px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            h1 {
+                font-size: 2em;
+            }
+
+            .App-input {
+                font-size: 16px;
+            }
+
+            .App-button {
+                font-size: 16px;
+                padding: 12px 20px;
+            }
+
+            .App-summary {
+                font-size: 1em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="root" class="App"></div>
+
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+
+    <script>
+        const { useState } = React;
+
+        function App() {
+            const [url, setUrl] = useState("");
+            const [summary, setSummary] = useState("");
+            const [loading, setLoading] = useState(false);
+            const [error, setError] = useState("");
+
+            const summarizeArticle = async () => {
+                if (!url) {
+                    setError("Please enter a valid URL.");
+                    return;
+                }
+
+                setSummary("");
+                setError("");
+                setLoading(true);
+
+                try {
+                    const response = await fetch(
+                        `https://article-extractor-and-summarizer.p.rapidapi.com/summarize?url=${encodeURIComponent(url)}&length=3`,
+                        {
+                            method: "GET",
+                            headers: {
+                                "X-RapidAPI-Key": "YOUR_RAPIDAPI_KEY", // Replace with your RapidAPI key
+                                "X-RapidAPI-Host": "article-extractor-and-summarizer.p.rapidapi.com",
+                            },
+                        }
+                    );
+
+                    if (!response.ok) {
+                        throw new Error("Failed to fetch summary. Please try again.");
+                    }
+
+                    const data = await response.json();
+                    setSummary(data.summary || "No summary available.");
+                } catch (error) {
+                    setError(error.message);
+                } finally {
+                    setLoading(false);
+                }
+            };
+
+            return (
+                <div className="App">
+                    <h1>Article Summarizer</h1>
+                    <input 
+                        type="url" 
+                        value={url}
+                        onChange={(e) => setUrl(e.target.value)}
+                        placeholder="Enter the URL of the article" 
+                        required
+                        className="App-input"
+                    />
+                    <br />
+                    <button onClick={summarizeArticle} className="App-button">Summarize</button>
+
+                    {loading && <div className="spinner"></div>}
+
+                    {summary && <div className="App-summary">{summary}</div>}
+                    {error && <div className="App-error">{error}</div>}
+                </div>
+            );
+        }
+
+        // Mount the React app into the 'root' div
+        ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+    </script>
+</body>
+</html>
